@@ -40,20 +40,23 @@ module Fixed_Point_Unit
     reg [WIDTH - 1 : 0] root;
     reg root_ready;
 
+    // Define states for the square root state machine
     localparam IDLE = 2'b00, START = 2'b01, CALCULATE = 2'b10, DONE = 2'b11;
 
     reg [1 : 0] sqrt_state, sqrt_next_state;
 
     reg sqrt_start;
     reg sqrt_busy;
-    
-    reg [WIDTH - 1 : 0] x, x_next;              
-    reg [WIDTH - 1 : 0] q, q_next;              
-    reg [WIDTH + 1 : 0] ac, ac_next;            
-    reg [WIDTH + 1 : 0] test_res;               
+
+    // Registers for the square root algorithm
+    reg [WIDTH - 1 : 0] x, x_next;              // Current remainder
+    reg [WIDTH - 1 : 0] q, q_next;              // Current result
+    reg [WIDTH + 1 : 0] ac, ac_next;            // Accumulator
+    reg [WIDTH + 1 : 0] test_res;               // Test subtraction result
 
     reg [4 : 0] iteration = 0;
 
+    // State transition logic
     always @(posedge clk) 
     begin
         if (operation == `FPU_SQRT)
@@ -63,6 +66,7 @@ module Fixed_Point_Unit
             root_ready <= 0;
     end 
 
+    // Next state and control signal logic
     always @(*) 
     begin
         sqrt_next_state = sqrt_state;
@@ -89,6 +93,7 @@ module Fixed_Point_Unit
         endcase
     end                            
 
+    // Square root calculation logic
     always @(*)
     begin
         test_res = ac - {q, 2'b01};
@@ -104,11 +109,13 @@ module Fixed_Point_Unit
             q_next = q << 1;
         end
     end
-    
+
+    // Square root sequential logic
     always @(posedge clk) 
     begin
         if (sqrt_start)
         begin
+            // Initialize for new square root calculation
             sqrt_busy <= 1;
             root_ready <= 0;
             iteration <= 0;
@@ -119,14 +126,14 @@ module Fixed_Point_Unit
         else if (sqrt_busy)
         begin
             if (iteration == ((WIDTH + FBITS) >> 1)-1) 
-            begin  // we're done
+            begin  // Final iteration
                 sqrt_busy <= 0;
                 root_ready <= 1;
                 root <= q_next;
             end
 
             else 
-            begin  // next iteration
+            begin  // Continue to next iteration
                 iteration <= iteration + 1;
                 x <= x_next;
                 ac <= ac_next;
@@ -143,12 +150,15 @@ module Fixed_Point_Unit
     reg product_ready;
 
     reg [2:0] mul_state;
-    
+
+    // Operands for the 16x16 multiplier
     reg [15 : 0] mul_op1, mul_op2;
     wire [31 : 0] mul_result;
 
+    // Partial products for 32x32 multiplication
     reg [31 : 0] P1, P2, P3, P4;
 
+    // Instantiate 16x16 multiplier
     Multiplier multiplier
     (
         .operand_1(mul_op1),
@@ -156,9 +166,11 @@ module Fixed_Point_Unit
         .product(mul_result)
     );
 
+    // Multiplication state machine and logic
     always @(posedge clk or posedge reset)
     begin
         if (reset) begin
+            // Reset all multiplication-related registers
             mul_state <= 0;
             product_ready <= 0;
             product <= 0;
@@ -167,34 +179,34 @@ module Fixed_Point_Unit
         end
         else if (operation == `FPU_MUL) begin
             case (mul_state)
-                0: begin // A1 * B1
+                0: begin // Multiply lower halves: A1 * B1
                     mul_op1 <= operand_1[15:0];
                     mul_op2 <= operand_2[15:0];
                     mul_state <= 1;
                 end
-                1: begin // A2 * B1
+                1: begin // Multiply upper half of A with lower half of B: A2 * B1
                     P1 <= mul_result;
                     mul_op1 <= operand_1[31:16];
                     mul_op2 <= operand_2[15:0];
                     mul_state <= 2;
                 end
-                2: begin // A1 * B2
+                2: begin // Multiply lower half of A with upper half of B: A1 * B2
                     P2 <= mul_result << 16;
                     mul_op1 <= operand_1[15:0];
                     mul_op2 <= operand_2[31:16];
                     mul_state <= 3;
                 end
-                3: begin // A2 * B2
+                3: begin // Multiply upper halves: A2 * B2
                     P3 <= mul_result << 16;
                     mul_op1 <= operand_1[31:16];
                     mul_op2 <= operand_2[31:16];
                     mul_state <= 4;
                 end
-                4: begin // Combine results
+                4: begin // Prepare final partial product
                     P4 <= mul_result << 32;
                     mul_state <= 5;
                 end
-                5: begin
+                5: begin // Combine all partial products
                     product <= P1 + P2 + P3 + P4;
                     product_ready <= 1;
                     mul_state <= 0;
