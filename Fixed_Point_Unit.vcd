@@ -1,5 +1,5 @@
 $date
-	Mon Jul 01 23:52:49 2024
+	Tue Jul 02 21:29:25 2024
 $end
 $version
 	Icarus Verilog
@@ -22,54 +22,86 @@ $var wire 32 ) operand_1 [31:0] $end
 $var wire 32 * operand_2 [31:0] $end
 $var wire 2 + operation [1:0] $end
 $var wire 1 ( reset $end
-$var wire 32 , mul_result [31:0] $end
-$var parameter 32 - FBITS $end
-$var parameter 32 . WIDTH $end
-$var reg 32 / P1 [31:0] $end
-$var reg 32 0 P2 [31:0] $end
-$var reg 32 1 P3 [31:0] $end
-$var reg 32 2 P4 [31:0] $end
-$var reg 16 3 mul_op1 [15:0] $end
-$var reg 16 4 mul_op2 [15:0] $end
-$var reg 3 5 mul_state [2:0] $end
-$var reg 64 6 product [63:0] $end
-$var reg 1 7 product_ready $end
+$var wire 32 , multiplierCircuitResult [31:0] $end
+$var parameter 3 - ADD $end
+$var parameter 32 . FBITS $end
+$var parameter 3 / FIRSTMUL $end
+$var parameter 3 0 FOURTHMUL $end
+$var parameter 2 1 INITIAL $end
+$var parameter 3 2 INITIALSTATE $end
+$var parameter 3 3 SECONDMUL $end
+$var parameter 2 4 SQRT $end
+$var parameter 3 5 THIRDMUL $end
+$var parameter 32 6 WIDTH $end
+$var reg 32 7 final_result [31:0] $end
+$var reg 32 8 iteration [31:0] $end
+$var reg 16 9 multiplierCircuitInput1 [15:0] $end
+$var reg 16 : multiplierCircuitInput2 [15:0] $end
+$var reg 32 ; operand_1_temp [31:0] $end
+$var reg 32 < partialProduct1 [31:0] $end
+$var reg 32 = partialProduct2 [31:0] $end
+$var reg 32 > partialProduct3 [31:0] $end
+$var reg 32 ? partialProduct4 [31:0] $end
+$var reg 64 @ product [63:0] $end
+$var reg 1 A product_ready $end
+$var reg 32 B radicand [31:0] $end
 $var reg 1 " ready $end
-$var reg 32 8 result [31:0] $end
-$var reg 32 9 root [31:0] $end
-$var reg 1 : root_ready $end
-$scope module multiplier $end
-$var wire 16 ; operand_1 [15:0] $end
-$var wire 16 < operand_2 [15:0] $end
-$var reg 32 = product [31:0] $end
+$var reg 32 C result [31:0] $end
+$var reg 32 D root [31:0] $end
+$var reg 1 E root_ready $end
+$var reg 3 F state [2:0] $end
+$var reg 1 G state1 $end
+$var reg 32 H temp_result [31:0] $end
+$var reg 32 I temp_root [31:0] $end
+$var reg 2 J two_bit [1:0] $end
+$scope module multiplier_circuit $end
+$var wire 16 K operand_1 [15:0] $end
+$var wire 16 L operand_2 [15:0] $end
+$var reg 32 M product [31:0] $end
 $upscope $end
 $upscope $end
 $upscope $end
 $enddefinitions $end
 $comment Show the parameter values. $end
 $dumpall
-b100000 .
-b1010 -
+b100000 6
+b11 5
+b1 4
+b10 3
+b0 2
+b0 1
+b100 0
+b1 /
+b1010 .
+b101 -
 b100 #
 $end
 #0
 $dumpvars
-b0 =
-b0 <
-b0 ;
-x:
+bx M
+bx L
+bx K
+bx J
+bx I
+bx H
+0G
+b0 F
+0E
+b0 D
+bz C
+bx B
+0A
+b0 @
+bx ?
+bx >
+bx =
+bx <
+bx ;
+bx :
 bx 9
-bz 8
-07
-b0 6
-b0 5
-b0 4
-b0 3
-b0 2
-b0 1
-b0 0
-b0 /
-b0 ,
+bx 8
+bx 7
+bx ,
 bx +
 bx *
 bx )
@@ -103,7 +135,7 @@ $end
 #20
 1"
 b1111011000000 !
-b1111011000000 8
+b1111011000000 C
 b0 '
 b0 +
 b1000001000000 &
@@ -116,7 +148,7 @@ b111010000000 )
 #24
 0"
 bz !
-bz 8
+bz C
 bz '
 bz +
 bz &
@@ -129,7 +161,7 @@ bz )
 #28
 1"
 b100010000000 !
-b100010000000 8
+b100010000000 C
 b1 '
 b1 +
 b11000000000 &
@@ -142,7 +174,7 @@ b111010000000 )
 #32
 0"
 bz !
-bz 8
+bz C
 bz '
 bz +
 bz &
@@ -153,15 +185,8 @@ bz )
 #34
 0$
 #36
-b10101110000000000000000 ,
-b10101110000000000000000 =
 b0 !
-b0 8
-b1 5
-b11000000000 4
-b11000000000 <
-b111010000000 3
-b111010000000 ;
+b0 C
 b10 '
 b10 +
 b11000000000 &
@@ -172,50 +197,65 @@ b111010000000 )
 #38
 0$
 #40
-b0 ,
+b10101110000000000000000 ,
+b10101110000000000000000 M
+b1 F
+b0 ?
+b0 >
 b0 =
-b10 5
-b0 3
-b0 ;
-b10101110000000000000000 /
+b0 <
+b11000000000 :
+b11000000000 L
+b111010000000 9
+b111010000000 K
 1$
 #42
 0$
 #44
-b11 5
-b0 4
-b0 <
-b111010000000 3
-b111010000000 ;
+b0 ,
+b0 M
+b10 F
+b0 9
+b0 K
+b10101110000000000000000 <
 1$
 #46
 0$
 #48
-b100 5
-b0 3
-b0 ;
+b11 F
+b0 :
+b0 L
+b111010000000 9
+b111010000000 K
 1$
 #50
 0$
 #52
-b101 5
+b100 F
+b0 9
+b0 K
 1$
 #54
 0$
 #56
-1"
-b1010111000000 !
-b1010111000000 8
-b0 5
-17
-b10101110000000000000000 6
+b101 F
 1$
 #58
 0$
 #60
+1"
+b1010111000000 !
+b1010111000000 C
+1A
+b0 F
+b10101110000000000000000 @
+1$
+#62
+0$
+#64
 0"
 bz !
-bz 8
+bz C
 bz '
 bz +
 bz &
@@ -223,91 +263,330 @@ bz *
 bz %
 bz )
 1$
-#62
+#66
 0$
-#64
-x"
-bx !
-bx 8
+#68
+b0 !
+b0 C
 b11 '
 b11 +
 b11100110000000000 %
 b11100110000000000 )
 1$
-#66
-0$
-#68
-1$
 #70
 0$
 #72
+b0 7
+1G
+b10101 8
+b1 I
+b0 B
 1$
 #74
 0$
 #76
+b10100 8
+bx B
+bx00 ;
+b1 7
+b11111111111111111111111111111111 H
+1$
+#78
+0$
+#80
+b10011 8
+b101 I
+bx0000 ;
+b11 7
+bx H
+1$
+#82
+0$
+#84
+b10010 8
+b1101 I
+bx000000 ;
+b111 7
+1$
+#86
+0$
+#88
+b10001 8
+b11101 I
+bx00000000 ;
+b1111 7
+1$
+#90
+0$
+#92
+b10000 8
+b111101 I
+bx0000000000 ;
+b11111 7
+1$
+#94
+0$
+#96
+b1111 8
+b1111101 I
+bx000000000000 ;
+b111111 7
+1$
+#98
+0$
+#100
+b1110 8
+b11111101 I
+bx00000000000000 ;
+b1111111 7
+1$
+#102
+0$
+#104
+b1101 8
+b111111101 I
+bx0000000000000000 ;
+b11111111 7
+1$
+#106
+0$
+#108
+b1100 8
+b1111111101 I
+bx000000000000000000 ;
+b111111111 7
+1$
+#110
+0$
+#112
+b1011 8
+b11111111101 I
+bx00000000000000000000 ;
+b1111111111 7
+1$
+#114
+0$
+#116
+b1010 8
+b111111111101 I
+bx0000000000000000000000 ;
+b11111111111 7
+1$
+#118
+0$
+#120
+b1001 8
+b1111111111101 I
+bx000000000000000000000000 ;
+b111111111111 7
+1$
+#122
+0$
+#124
+b1000 8
+b11111111111101 I
+bx00000000000000000000000000 ;
+b1111111111111 7
+1$
+#126
+0$
+#128
+b111 8
+b111111111111101 I
+bx0000000000000000000000000000 ;
+b11111111111111 7
+1$
+#130
+0$
+#132
+b110 8
+b1111111111111101 I
+bx000000000000000000000000000000 ;
+b111111111111111 7
+1$
+#134
+0$
+#136
+b101 8
+b11111111111111101 I
+b0 ;
+b1111111111111111 7
+1$
+#138
+0$
+#140
+b100 8
+b111111111111111101 I
+b0 J
+b11111111111111111 7
+1$
+#142
+0$
+#144
+b11 8
+b1111111111111111101 I
+b111111111111111111 7
+1$
+#146
+0$
+#148
+b10 8
+b11111111111111111101 I
+b1111111111111111111 7
+1$
+#150
+0$
+#152
+b1 8
+b111111111111111111101 I
+b11111111111111111111 7
+1$
+#154
+0$
+#156
+b0 8
+b1111111111111111111101 I
+b111111111111111111111 7
+1$
+#158
+0$
+#160
+1"
+b111111111111111111111 !
+b111111111111111111111 C
+0G
+1E
+b111111111111111111111 D
+1$
+#162
+0$
+#164
+b0 7
+1G
+b10101 8
+b1 I
+b0 B
+1$
+#166
+0$
+#168
+b10100 8
+b1 7
+b11111111111111111111111111111111 H
+1$
+#170
+0$
+#172
 0"
 bz !
-bz 8
+bz C
+b10011 8
+b101 I
+b11 7
 bz '
 bz +
 bz %
 bz )
 1$
-#78
+#174
 0$
-#80
+#176
+b10010 8
+b1101 I
+b111 7
+b11111111111111111111111111111011 H
 1$
-#82
+#178
 0$
-#84
+#180
+b10001 8
+b11101 I
+b1111 7
+b11111111111111111111111111110011 H
 1$
-#86
+#182
 0$
-#88
+#184
+b10000 8
+b111101 I
+b11111 7
+b11111111111111111111111111100011 H
 1$
-#90
+#186
 0$
-#92
+#188
+b1111 8
+b1111101 I
+b111111 7
+b11111111111111111111111111000011 H
 1$
-#94
+#190
 0$
-#96
+#192
+b1110 8
+b11111101 I
+b1111111 7
+b11111111111111111111111110000011 H
 1$
-#98
+#194
 0$
-#100
+#196
+b1101 8
+b111111101 I
+b11111111 7
+b11111111111111111111111100000011 H
 1$
-#102
+#198
 0$
-#104
+#200
+b1100 8
+b1111111101 I
+b111111111 7
+b11111111111111111111111000000011 H
 1$
-#106
+#202
 0$
-#108
+#204
+b1011 8
+b11111111101 I
+b1111111111 7
+b11111111111111111111110000000011 H
 1$
-#110
+#206
 0$
-#112
+#208
+b1010 8
+b111111111101 I
+b11111111111 7
+b11111111111111111111100000000011 H
 1$
-#114
+#210
 0$
-#116
+#212
 $dumpoff
+bx M
+bx L
+bx K
+bx J
+bx I
+bx H
+xG
+bx F
+xE
+bx D
+bx C
+bx B
+xA
+bx @
+bx ?
+bx >
 bx =
 bx <
 bx ;
-x:
+bx :
 bx 9
 bx 8
-x7
-bx 6
-bx 5
-bx 4
-bx 3
-bx 2
-bx 1
-bx 0
-bx /
+bx 7
 bx ,
 bx +
 bx *

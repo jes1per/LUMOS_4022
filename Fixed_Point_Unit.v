@@ -40,9 +40,70 @@ module Fixed_Point_Unit
     reg [WIDTH - 1 : 0] root;
     reg root_ready;
 
-        /*
-         *  Describe Your Square Root Calculator Circuit Here.
-         */
+    // Square Root Calculator
+    reg [WIDTH-1:0] radicand, sqrt, remainder, next_remainder;
+    reg [5:0] iter_count;
+    reg [1:0] sqrt_state;
+
+    // BitCounter #(WIDTH) bit_counter_inst (
+    //     .data(radicand),
+    //     .bit_count(bit_count)
+    // );
+
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            root <= 0;
+            root_ready <= 0;
+            sqrt_state <= 0;
+            iter_count <= 0;
+            radicand <= 0;
+            sqrt <= 0;
+            remainder <= 0;
+            next_remainder <= 0;
+        end else if (operation == `FPU_SQRT) begin
+            case (sqrt_state)
+                0: begin // Initialize
+                    // if (bit_count % 2 == 0) begin
+                    radicand <= operand_1; // if bit_count is even
+                    // end
+                    // else begin
+                    //     radicand <= operand_1 << 1; // if bit_count is odd
+                    // end
+                    sqrt <= 0;
+                    remainder <= 0;
+                    next_remainder <= 0;
+                    iter_count <= 0;
+                    sqrt_state <= 1;
+                end
+                1: begin // Main calculation loop
+                    if (iter_count < (WIDTH + FBITS) / 2 && radicand != 0) begin
+                        next_remainder <= {remainder, radicand[WIDTH-1:WIDTH-2]};
+                        radicand <= {radicand[WIDTH-3:0], 2'b00};
+                        
+                        remainder <= next_remainder - {sqrt, 2'b01};
+
+                        if (remainder[WIDTH-1] == 1'b1) begin
+                            // Remainder is negative, revert subtraction and append 0
+                            remainder <= next_remainder;
+                            sqrt <= {sqrt, 1'b0};
+                        end else begin
+                            // Remainder is positive or zero, append 1
+                            sqrt <= {sqrt, 1'b1};
+                        end
+                        
+                        iter_count <= iter_count + 1;
+                    end else begin
+                        sqrt_state <= 2;
+                    end
+                end
+                2: begin // Finalize
+                    root <= sqrt << 10;
+                    root_ready <= 1;
+                    sqrt_state <= 0;
+                end
+            endcase
+        end
+    end
 
     // ------------------ //
     // Multiplier Circuit //
@@ -126,3 +187,22 @@ module Multiplier
         product <= operand_1 * operand_2;
     end
 endmodule
+
+// module BitCounter #(parameter WIDTH = 32) (
+//     input wire [WIDTH-1:0] data,
+//     output reg [5:0] bit_count
+// );
+//     reg [5:0] i;
+//     integer a;
+
+//     always @(*) begin
+//         bit_count = 0;
+//         a = 1;
+//         for (i = WIDTH-1; i >= 0; i = i - 1) begin
+//             if (data[i] && a) begin
+//                 bit_count = i + 1;
+//                 a = 0;
+//             end
+//         end
+//     end
+// endmodule
