@@ -40,68 +40,99 @@ module Fixed_Point_Unit
     reg [WIDTH - 1 : 0] root;
     reg root_ready;
 
-    // Square Root Calculator
-    reg [WIDTH-1:0] radicand, sqrt, remainder, next_remainder;
-    reg [5:0] iter_count;
-    reg [1:0] sqrt_state;
+    localparam IDLE = 2'b00, START = 2'b01, CALCULATE = 2'b10, DONE = 2'b11;
 
-    // BitCounter #(WIDTH) bit_counter_inst (
-    //     .data(radicand),
-    //     .bit_count(bit_count)
-    // );
+    reg [1 : 0] sqrt_state, sqrt_next_state;
 
-    always @(posedge clk or posedge reset) begin
-        if (reset) begin
-            root <= 0;
+    reg sqrt_start;
+    reg sqrt_busy;
+    
+    reg [WIDTH - 1 : 0] x, x_next;              
+    reg [WIDTH - 1 : 0] q, q_next;              
+    reg [WIDTH + 1 : 0] ac, ac_next;            
+    reg [WIDTH + 1 : 0] test_res;               
+
+    reg [4 : 0] iteration = 0;
+
+    always @(posedge clk) 
+    begin
+        if (operation == `FPU_SQRT)
+            sqrt_state <= sqrt_next_state;
+        else
+            sqrt_state <= IDLE;
             root_ready <= 0;
-            sqrt_state <= 0;
-            iter_count <= 0;
-            radicand <= 0;
-            sqrt <= 0;
-            remainder <= 0;
-            next_remainder <= 0;
-        end else if (operation == `FPU_SQRT) begin
-            case (sqrt_state)
-                0: begin // Initialize
-                    // if (bit_count % 2 == 0) begin
-                    radicand <= operand_1; // if bit_count is even
-                    // end
-                    // else begin
-                    //     radicand <= operand_1 << 1; // if bit_count is odd
-                    // end
-                    sqrt <= 0;
-                    remainder <= 0;
-                    next_remainder <= 0;
-                    iter_count <= 0;
-                    sqrt_state <= 1;
-                end
-                1: begin // Main calculation loop
-                    if (iter_count < (WIDTH + FBITS) / 2 && radicand != 0) begin
-                        next_remainder <= {remainder, radicand[WIDTH-1:WIDTH-2]};
-                        radicand <= {radicand[WIDTH-3:0], 2'b00};
-                        
-                        remainder <= next_remainder - {sqrt, 2'b01};
+    end 
 
-                        if (remainder[WIDTH-1] == 1'b1) begin
-                            // Remainder is negative, revert subtraction and append 0
-                            remainder <= next_remainder;
-                            sqrt <= {sqrt, 1'b0};
-                        end else begin
-                            // Remainder is positive or zero, append 1
-                            sqrt <= {sqrt, 1'b1};
-                        end
-                        
-                        iter_count <= iter_count + 1;
-                    end else begin
-                        sqrt_state <= 2;
-                    end
+    always @(*) 
+    begin
+        sqrt_next_state = sqrt_state;
+        case (sqrt_state)
+            IDLE: 
+                if (operation == `FPU_SQRT)
+                begin
+                    sqrt_next_state = START;
+                    sqrt_start <= 0;
                 end
-                2: begin // Finalize
-                    root <= sqrt << 10;
-                    root_ready <= 1;
-                    sqrt_state <= 0;
-                end
-            endcase
+            START:
+            begin
+                sqrt_next_state = CALCULATE;
+                sqrt_start <= 1;
+            end
+            CALCULATE:
+            begin
+                if (iteration == ((WIDTH + FBITS) >> 1) - 1)
+                    sqrt_next_state = DONE;
+                    sqrt_start <= 0;
+            end
+            DONE:
+                sqrt_next_state = IDLE;
+        endcase
+    end                            
+
+    always @(*)
+    begin
+        test_res = ac - {q, 2'b01};
+
+        if (test_res[WIDTH + 1] == 0) 
+        begin
+            {ac_next, x_next} = {test_res[WIDTH - 1 : 0], x, 2'b0};
+            q_next = {q[WIDTH - 2 : 0], 1'b1};
+        end 
+        else 
+        begin
+            {ac_next, x_next} = {ac[WIDTH - 1 : 0], x, 2'b0};
+            q_next = q << 1;
+        end
+    end
+    
+    always @(posedge clk) 
+    begin
+        if (sqrt_start)
+        begin
+            sqrt_busy <= 1;
+            root_ready <= 0;
+            iteration <= 0;
+            q <= 0;
+            {ac, x} <= {{WIDTH{1'b0}}, operand_1, 2'b0};
+        end
+
+        else if (sqrt_busy)
+        begin
+            if (iteration == ((WIDTH + FBITS) >> 1)-1) 
+            begin  // we're done
+                sqrt_busy <= 0;
+                root_ready <= 1;
+                root <= q_next;
+            end
+
+            else 
+            begin  // next iteration
+                iteration <= iteration + 1;
+                x <= x_next;
+                ac <= ac_next;
+                q <= q_next;
+                root_ready <= 0;
+            end
         end
     end
 
@@ -187,22 +218,3 @@ module Multiplier
         product <= operand_1 * operand_2;
     end
 endmodule
-
-// module BitCounter #(parameter WIDTH = 32) (
-//     input wire [WIDTH-1:0] data,
-//     output reg [5:0] bit_count
-// );
-//     reg [5:0] i;
-//     integer a;
-
-//     always @(*) begin
-//         bit_count = 0;
-//         a = 1;
-//         for (i = WIDTH-1; i >= 0; i = i - 1) begin
-//             if (data[i] && a) begin
-//                 bit_count = i + 1;
-//                 a = 0;
-//             end
-//         end
-//     end
-// endmodule
