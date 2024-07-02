@@ -1,6 +1,6 @@
 # Computer Organization - Spring 2024
 ## Iran University of Science and Technology
-### Assignment 2
+### Project
 - **Team Members:** Parsa Amiri, Rasa Ghorbanalizade, Mohammad Amin Mirzaabbasi
 - **Date:** 2/7/2024
 ---
